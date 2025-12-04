@@ -43,7 +43,7 @@ async function displayUserInfo(userId) {
             });
         } else {
             const noActivityElement = document.createElement('p');
-            noActivityElement.textContent = 'No activities currently.';
+            noActivityElement.textContent = 'Sleeping...';
             userInfoDiv.appendChild(noActivityElement);
         }
     } else {
