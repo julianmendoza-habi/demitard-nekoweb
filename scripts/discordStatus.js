@@ -12,7 +12,7 @@ async function displayUserInfo(userId) {
     const userInfo = await fetchUserInfo(userId);
     const userInfoDiv = document.getElementById('discord-status');
     
-    if (userInfo.success) {
+    if (userInfo?.success) {
         const activities = userInfo.data.activities;
         const discordUser = userInfo.data.discord_user;
         
@@ -38,12 +38,14 @@ async function displayUserInfo(userId) {
                 activityName.textContent = `Activity: ${activity.name}`;
                 userInfoDiv.appendChild(activityName);
                 const activityDetails = document.createElement('p');
-                activityDetails.textContent = `Details: ${activity.details}`;
-                userInfoDiv.appendChild(activityDetails);
+                if (activity.details) {
+                    activityDetails.textContent = `Details: ${activity.details}`;
+                    userInfoDiv.appendChild(activityDetails);
+                }
             });
         } else {
             const noActivityElement = document.createElement('p');
-            noActivityElement.textContent = 'Sleeping...';
+            noActivityElement.textContent = 'Not doing anything...';
             userInfoDiv.appendChild(noActivityElement);
         }
     } else {
