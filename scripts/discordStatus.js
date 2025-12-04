@@ -1,3 +1,5 @@
+/* jshint esversion: 11 */
+
 async function fetchUserInfo(userId) {
     try {
         const response = await fetch(`https://api.lanyard.rest/v1/users/${userId}`);
