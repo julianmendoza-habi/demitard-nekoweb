@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" type="text/css" href="css/styles.css">
+<link rel="stylesheet" type="text/css" href="css/sort.css">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demitard - Sort Visualizer</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html"><h1>Demitard</h1></a>
+        </div>
+        <div class="sort-title">
+            <h2>The Thingamajig</h2>
+        </div>
+        <div class="sort-controls">
+            <div class="control-group">
+                <label for="algorithm-select">Algorithm</label>
+                <select id="algorithm-select">
+                    <optgroup label="O(n²) - Simple">
+                        <option value="bubble">Bubble Sort</option>
+                        <option value="selection">Selection Sort</option>
+                        <option value="insertion">Insertion Sort</option>
+                        <option value="gnome">Gnome Sort</option>
+                    </optgroup>
+                    <optgroup label="O(n log n) - Efficient">
+                        <option value="merge">Merge Sort</option>
+                        <option value="quick">Quick Sort</option>
+                        <option value="heap">Heap Sort</option>
+                    </optgroup>
+                    <optgroup label="Improved">
+                        <option value="shell">Shell Sort</option>
+                        <option value="cocktail">Cocktail Shaker Sort</option>
+                        <option value="comb">Comb Sort</option>
+                    </optgroup>
+                    <optgroup label="Non-comparison">
+                        <option value="radix">Radix Sort (LSD)</option>
+                    </optgroup>
+                    <optgroup label="The Best Sort">
+                        <option value="bogo">Bogo Sort (max 8)</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="size-slider">Size: <span id="size-value">50</span></label>
+                <input type="range" id="size-slider" min="5" max="300" value="50">
+            </div>
+            <div class="control-group">
+                <label for="speed-slider">Speed: <span id="speed-value">50</span></label>
+                <input type="range" id="speed-slider" min="1" max="100" value="50">
+            </div>
+            <div class="control-buttons">
+                <button id="run-btn">Run</button>
+                <button id="stop-btn" disabled>Stop</button>
+                <button id="shuffle-btn">Shuffle</button>
+                <button id="mute-btn">Sound: ON</button>
+            </div>
+        </div>
+        <div class="sort-stats">
+            <span>Comparisons: <span id="stats-comparisons">0</span></span>
+            <span>Swaps: <span id="stats-swaps">0</span></span>
+            <span>Time: <span id="stats-time">0.00s</span></span>
+        </div>
+        <div class="sort-visualizer">
+            <div id="bars-container"></div>
+        </div>
+        <div class="footer">
+            <a href="index.html"><p>Back to Home</p></a>
+        </div>
+    </div>
+    <script src="scripts/sortVisualizer.js"></script>
+</body>
+</html>

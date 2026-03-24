@@ -1,0 +1,257 @@
+.sort-title {
+    width: 75%;
+    text-align: center;
+    color: white;
+    padding: 15px 0;
+}
+
+.sort-title h2 {
+    font-size: 28px;
+    letter-spacing: 2px;
+}
+
+.sort-controls {
+    width: 75%;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    color: white;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-group label {
+    font-size: 14px;
+    color: #ccc;
+}
+
+.control-group select {
+    background-color: rgba(17, 17, 17, 0.95);
+    color: white;
+    border: 1px solid white;
+    padding: 8px 12px;
+    font-family: 'Kode Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+}
+
+.control-group select:focus {
+    border-color: #ffdf42;
+}
+
+.control-group select option {
+    background-color: #111;
+    color: white;
+}
+
+.control-group select optgroup {
+    background-color: #111;
+    color: #ffdf42;
+    font-style: normal;
+}
+
+.control-group input[type="range"] {
+    width: 150px;
+    accent-color: #ffdf42;
+    cursor: pointer;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.control-buttons button {
+    background-color: rgba(17, 17, 17, 0.95);
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    font-family: 'Kode Mono', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.control-buttons button:hover:not(:disabled) {
+    background-color: #ffdf42;
+    color: black;
+    border-color: #ffdf42;
+}
+
+.control-buttons button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+#run-btn {
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+#run-btn:hover:not(:disabled) {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+#stop-btn {
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+#stop-btn:hover:not(:disabled) {
+    background-color: #ff4444;
+    color: white;
+    border-color: #ff4444;
+}
+
+#mute-btn {
+    font-size: 12px;
+    padding: 10px 14px;
+}
+
+#mute-btn.muted {
+    color: #666;
+    border-color: #666;
+}
+
+.sort-stats {
+    width: 75%;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    color: #ccc;
+    padding: 12px 0;
+    font-size: 14px;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.sort-stats span span {
+    color: #ffdf42;
+    font-weight: bold;
+}
+
+.sort-visualizer {
+    width: 75%;
+    padding: 20px;
+    min-height: 350px;
+}
+
+#bars-container {
+    width: 100%;
+    height: 350px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0;
+}
+
+.bar {
+    background-color: white;
+    min-width: 1px;
+    border-radius: 1px 1px 0 0;
+}
+
+@media screen and (max-width: 768px) {
+    .sort-title h2 {
+        font-size: 18px;
+    }
+
+    .sort-controls {
+        width: 90%;
+        gap: 12px;
+        padding: 15px;
+    }
+
+    .control-group label {
+        font-size: 11px;
+    }
+
+    .control-group select {
+        font-size: 11px;
+        padding: 6px 8px;
+    }
+
+    .control-group input[type="range"] {
+        width: 110px;
+    }
+
+    .control-buttons button {
+        font-size: 11px;
+        padding: 8px 14px;
+    }
+
+    .sort-stats {
+        width: 90%;
+        font-size: 11px;
+        gap: 15px;
+    }
+
+    .sort-visualizer {
+        width: 90%;
+        min-height: 250px;
+    }
+
+    #bars-container {
+        height: 250px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .sort-title h2 {
+        font-size: 14px;
+    }
+
+    .sort-controls {
+        width: 95%;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .control-group label {
+        font-size: 9px;
+    }
+
+    .control-group select {
+        font-size: 9px;
+        max-width: 140px;
+    }
+
+    .control-group input[type="range"] {
+        width: 90px;
+    }
+
+    .control-buttons button {
+        font-size: 9px;
+        padding: 6px 10px;
+    }
+
+    .sort-stats {
+        width: 95%;
+        font-size: 9px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .sort-visualizer {
+        width: 95%;
+        min-height: 200px;
+        padding: 10px;
+    }
+
+    #bars-container {
+        height: 200px;
+    }
+}
