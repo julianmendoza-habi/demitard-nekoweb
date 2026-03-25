@@ -16,6 +16,7 @@ class SortVisualizer {
         this.startTime = 0;
         this.timerInterval = null;
         this._highlighted = [];
+        this._lastSoundTime = 0;
 
         this.barsContainer = document.getElementById('bars-container');
         this.algorithmSelect = document.getElementById('algorithm-select');
@@ -66,6 +67,8 @@ class SortVisualizer {
         this.muteBtn.classList.toggle('muted', this.muted);
     }
 
+    // ======================== ARRAY ========================
+
     generateArray() {
         this.array = Array.from({ length: this.size }, (_, i) => i + 1);
         this.fisherYatesShuffle();
@@ -80,6 +83,15 @@ class SortVisualizer {
             [this.array[i], this.array[j]] = [this.array[j], this.array[i]];
         }
     }
+
+    isArraySorted() {
+        for (let i = 0; i < this.array.length - 1; i++) {
+            if (this.array[i] > this.array[i + 1]) return false;
+        }
+        return true;
+    }
+
+    // ======================== STATS ========================
 
     resetStats() {
         this.comparisons = 0;
@@ -180,20 +192,29 @@ class SortVisualizer {
 
     playSound(value) {
         if (this.muted || !this.oscillator) return;
-        const freq = 150 + (value / this.size) * 900;
         const now = this.audioCtx.currentTime;
+        if (now - this._lastSoundTime < 0.004) return;
+        this._lastSoundTime = now;
+
+        const freq = 150 + (value / this.size) * 900;
         this.oscillator.frequency.setValueAtTime(freq, now);
         this.gainNode.gain.cancelScheduledValues(now);
         this.gainNode.gain.setValueAtTime(0.06, now);
-        this.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        this.gainNode.gain.linearRampToValueAtTime(0, now + 0.06);
+    }
+
+    silenceAudio() {
+        if (!this.gainNode || !this.audioCtx) return;
+        const now = this.audioCtx.currentTime;
+        this.gainNode.gain.cancelScheduledValues(now);
+        this.gainNode.gain.setValueAtTime(0, now);
     }
 
     // ======================== TIMING ========================
 
     getDelay() {
         const maxDelay = 250;
-        const minDelay = 0;
-        return maxDelay - (this.speed / 100) * (maxDelay - minDelay);
+        return maxDelay - (this.speed / 100) * maxDelay;
     }
 
     async delay() {
@@ -254,6 +275,17 @@ class SortVisualizer {
         this.stopBtn.disabled = !running;
     }
 
+    limitSize(max) {
+        if (this.size > max) {
+            this.size = max;
+            this.sizeSlider.value = max;
+            this.sizeValue.textContent = max;
+            this.generateArray();
+            this.resetStats();
+            this.startTime = performance.now();
+        }
+    }
+
     async run() {
         this.initAudio();
         this.stopped = false;
@@ -262,6 +294,7 @@ class SortVisualizer {
         this.startTimer();
 
         const algorithm = this.algorithmSelect.value;
+        const noSweep = new Set(['stalin', 'thanos', 'miracle']);
 
         try {
             switch (algorithm) {
@@ -275,16 +308,26 @@ class SortVisualizer {
                 case 'cocktail': await this.cocktailSort(); break;
                 case 'gnome': await this.gnomeSort(); break;
                 case 'comb': await this.combSort(); break;
-                case 'bogo': await this.bogoSort(); break;
                 case 'radix': await this.radixSort(); break;
+                case 'pancake': await this.pancakeSort(); break;
+                case 'stooge': await this.stoogeSort(0, this.array.length - 1); break;
+                case 'slowsort': await this.slowSort(0, this.array.length - 1); break;
+                case 'bogo': await this.bogoSort(); break;
+                case 'bozo': await this.bozoSort(); break;
+                case 'adhd': await this.adhdSort(); break;
+                case 'stalin': await this.stalinSort(); break;
+                case 'thanos': await this.thanosSort(); break;
+                case 'miracle': await this.miracleSort(); break;
+                case 'sleep': await this.sleepSort(); break;
             }
-            if (!this.stopped) {
+            if (!this.stopped && !noSweep.has(algorithm)) {
                 await this.completionSweep();
             }
         } catch (e) {
             if (e !== 'stopped') console.error(e);
         }
 
+        this.silenceAudio();
         this.stopTimer();
         this.setControls(false);
     }
@@ -306,7 +349,7 @@ class SortVisualizer {
         await new Promise((r) => setTimeout(r, 300));
     }
 
-    // ======================== SORTING ALGORITHMS ========================
+    // ======================== STANDARD SORTS ========================
 
     async bubbleSort() {
         const n = this.array.length;
@@ -397,25 +440,21 @@ class SortVisualizer {
 
     async partition(low, high) {
         let i = low - 1;
-
         for (let j = low; j < high; j++) {
             if (await this.compare(j, high) < 0) {
                 i++;
                 await this.swap(i, j);
             }
         }
-
         await this.swap(i + 1, high);
         return i + 1;
     }
 
     async heapSort() {
         const n = this.array.length;
-
         for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
             await this.heapify(n, i);
         }
-
         for (let i = n - 1; i > 0; i--) {
             await this.swap(0, i);
             await this.heapify(i, 0);
@@ -426,15 +465,12 @@ class SortVisualizer {
         let largest = i;
         const left = 2 * i + 1;
         const right = 2 * i + 2;
-
         if (left < n && (await this.compare(left, largest)) > 0) {
             largest = left;
         }
-
         if (right < n && (await this.compare(right, largest)) > 0) {
             largest = right;
         }
-
         if (largest !== i) {
             await this.swap(i, largest);
             await this.heapify(n, largest);
@@ -444,7 +480,6 @@ class SortVisualizer {
     async shellSort() {
         const n = this.array.length;
         let gap = Math.floor(n / 2);
-
         while (gap > 0) {
             for (let i = gap; i < n; i++) {
                 let j = i;
@@ -461,28 +496,23 @@ class SortVisualizer {
         let start = 0;
         let end = this.array.length - 1;
         let swapped = true;
-
         while (swapped) {
             swapped = false;
-
             for (let i = start; i < end; i++) {
                 if (await this.compare(i, i + 1) > 0) {
                     await this.swap(i, i + 1);
                     swapped = true;
                 }
             }
-
             if (!swapped) break;
             end--;
             swapped = false;
-
             for (let i = end - 1; i >= start; i--) {
                 if (await this.compare(i, i + 1) > 0) {
                     await this.swap(i, i + 1);
                     swapped = true;
                 }
             }
-
             start++;
         }
     }
@@ -490,7 +520,6 @@ class SortVisualizer {
     async gnomeSort() {
         let i = 0;
         const n = this.array.length;
-
         while (i < n) {
             if (i === 0 || (await this.compare(i - 1, i)) <= 0) {
                 i++;
@@ -506,14 +535,12 @@ class SortVisualizer {
         let gap = n;
         const shrink = 1.3;
         let sorted = false;
-
         while (!sorted) {
             gap = Math.floor(gap / shrink);
             if (gap <= 1) {
                 gap = 1;
                 sorted = true;
             }
-
             for (let i = 0; i + gap < n; i++) {
                 if (await this.compare(i, i + gap) > 0) {
                     await this.swap(i, i + gap);
@@ -523,40 +550,9 @@ class SortVisualizer {
         }
     }
 
-    async bogoSort() {
-        if (this.size > 8) {
-            this.size = 8;
-            this.sizeSlider.value = 8;
-            this.sizeValue.textContent = 8;
-            this.generateArray();
-            this.resetStats();
-            this.startTime = performance.now();
-        }
-
-        while (!this.isSorted()) {
-            this.checkStopped();
-            this.fisherYatesShuffle();
-            this.swapCount++;
-            this.statsSwaps.textContent = this.swapCount;
-            this.playSound(this.array[Math.floor(Math.random() * this.array.length)]);
-            this.renderAll();
-            await this.delay();
-        }
-    }
-
-    isSorted() {
-        for (let i = 0; i < this.array.length - 1; i++) {
-            this.comparisons++;
-            if (this.array[i] > this.array[i + 1]) return false;
-        }
-        this.statsComparisons.textContent = this.comparisons;
-        return true;
-    }
-
     async radixSort() {
         const max = Math.max(...this.array);
         let exp = 1;
-
         while (Math.floor(max / exp) > 0) {
             await this.countingSortByDigit(exp);
             exp *= 10;
@@ -569,22 +565,281 @@ class SortVisualizer {
         const count = new Array(10).fill(0);
 
         for (let i = 0; i < n; i++) {
-            const digit = Math.floor(this.array[i] / exp) % 10;
-            count[digit]++;
+            count[Math.floor(this.array[i] / exp) % 10]++;
         }
-
         for (let i = 1; i < 10; i++) {
             count[i] += count[i - 1];
         }
-
         for (let i = n - 1; i >= 0; i--) {
             const digit = Math.floor(this.array[i] / exp) % 10;
             output[count[digit] - 1] = this.array[i];
             count[digit]--;
         }
-
         for (let i = 0; i < n; i++) {
             await this.write(i, output[i]);
+        }
+    }
+
+    // ======================== OTHER SORTS ========================
+
+    async pancakeSort() {
+        for (let size = this.array.length; size > 1; size--) {
+            let maxIdx = 0;
+            for (let i = 1; i < size; i++) {
+                if (await this.compare(i, maxIdx) > 0) {
+                    maxIdx = i;
+                }
+            }
+            if (maxIdx !== size - 1) {
+                if (maxIdx > 0) await this.flip(0, maxIdx);
+                await this.flip(0, size - 1);
+            }
+        }
+    }
+
+    async flip(start, end) {
+        while (start < end) {
+            await this.swap(start, end);
+            start++;
+            end--;
+        }
+    }
+
+    async stoogeSort(i, j) {
+        if (i >= j) return;
+        if (await this.compare(i, j) > 0) {
+            await this.swap(i, j);
+        }
+        if (j - i + 1 >= 3) {
+            const t = Math.floor((j - i + 1) / 3);
+            await this.stoogeSort(i, j - t);
+            await this.stoogeSort(i + t, j);
+            await this.stoogeSort(i, j - t);
+        }
+    }
+
+    async slowSort(i, j) {
+        if (i >= j) return;
+        const m = Math.floor((i + j) / 2);
+        await this.slowSort(i, m);
+        await this.slowSort(m + 1, j);
+        if (await this.compare(j, m) < 0) {
+            await this.swap(j, m);
+        }
+        await this.slowSort(i, j - 1);
+    }
+
+    // ======================== MEME SORTS ========================
+
+    async bogoSort() {
+        this.limitSize(8);
+        while (!this.isArraySorted()) {
+            this.checkStopped();
+            this.fisherYatesShuffle();
+            this.swapCount++;
+            this.statsSwaps.textContent = this.swapCount;
+            this.playSound(this.array[Math.floor(Math.random() * this.array.length)]);
+            this.renderAll();
+            await this.delay();
+        }
+    }
+
+    async bozoSort() {
+        this.limitSize(15);
+        while (!this.isArraySorted()) {
+            this.checkStopped();
+            const a = Math.floor(Math.random() * this.array.length);
+            const b = Math.floor(Math.random() * this.array.length);
+            await this.swap(a, b);
+        }
+    }
+
+    async adhdSort() {
+        const n = this.array.length;
+        let sabotageRate = 0.4;
+
+        do {
+            this.checkStopped();
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    if (await this.compare(j, i) < 0) {
+                        await this.swap(j, i);
+                    }
+                }
+                if (Math.random() < sabotageRate) {
+                    const a = Math.floor(Math.random() * n);
+                    const b = Math.floor(Math.random() * n);
+                    await this.swap(a, b);
+                }
+            }
+            sabotageRate *= 0.7;
+        } while (!this.isArraySorted());
+    }
+
+    async stalinSort() {
+        const n = this.array.length;
+        const bars = this.barsContainer.children;
+        let max = this.array[0];
+        const purged = new Set();
+
+        bars[0].style.backgroundColor = '#4CAF50';
+        this.playSound(this.array[0]);
+        await this.delay();
+
+        for (let i = 1; i < n; i++) {
+            this.checkStopped();
+            this.comparisons++;
+            this.statsComparisons.textContent = this.comparisons;
+
+            this.highlightBars([i], '#ffdf42');
+            this.playSound(this.array[i]);
+            await this.delay();
+
+            if (this.array[i] >= max) {
+                max = this.array[i];
+                bars[i].style.backgroundColor = '#4CAF50';
+                this._highlighted = [];
+            } else {
+                purged.add(i);
+                bars[i].style.backgroundColor = '#ff4444';
+                this.playSound(this.array[i]);
+                await this.delay();
+                this.array[i] = 0;
+                this.updateBarHeight(i);
+                bars[i].style.backgroundColor = 'transparent';
+                this._highlighted = [];
+                this.swapCount++;
+                this.statsSwaps.textContent = this.swapCount;
+                await this.delay();
+            }
+        }
+
+        await new Promise((r) => setTimeout(r, 400));
+
+        const survivors = [];
+        for (let i = 0; i < n; i++) {
+            if (!purged.has(i)) survivors.push(this.array[i]);
+        }
+
+        for (let i = 0; i < n; i++) {
+            this.checkStopped();
+            const val = i < survivors.length ? survivors[i] : 0;
+            this.array[i] = val;
+            this.updateBarHeight(i);
+            if (val > 0) {
+                bars[i].style.backgroundColor = '#4CAF50';
+                this.playSound(val);
+            } else {
+                bars[i].style.backgroundColor = 'transparent';
+            }
+            await new Promise((r) => setTimeout(r, Math.max(3, 400 / n)));
+        }
+
+        await new Promise((r) => setTimeout(r, 300));
+    }
+
+    async thanosSort() {
+        const bars = this.barsContainer.children;
+        let alive = Array.from({ length: this.array.length }, (_, i) => i);
+
+        const isSubSorted = (indices) => {
+            for (let i = 1; i < indices.length; i++) {
+                if (this.array[indices[i]] < this.array[indices[i - 1]]) return false;
+            }
+            return true;
+        };
+
+        while (alive.length > 1 && !isSubSorted(alive)) {
+            this.checkStopped();
+            this.comparisons += alive.length;
+            this.statsComparisons.textContent = this.comparisons;
+
+            const shuffled = [...alive].sort(() => Math.random() - 0.5);
+            const surviveCount = Math.ceil(shuffled.length / 2);
+            const snappedSet = new Set(shuffled.slice(surviveCount));
+
+            for (const idx of snappedSet) {
+                bars[idx].style.backgroundColor = '#9b59b6';
+            }
+            this.playSound(this.size / 2);
+            await new Promise((r) => setTimeout(r, 700));
+
+            for (const idx of snappedSet) {
+                this.array[idx] = 0;
+                this.updateBarHeight(idx);
+                bars[idx].style.backgroundColor = 'transparent';
+                this.swapCount++;
+            }
+            this.statsSwaps.textContent = this.swapCount;
+            await new Promise((r) => setTimeout(r, 400));
+
+            alive = alive.filter((i) => !snappedSet.has(i));
+        }
+
+        await new Promise((r) => setTimeout(r, 300));
+
+        const survivorValues = alive.map((i) => this.array[i]).filter((v) => v > 0);
+        for (let i = 0; i < this.array.length; i++) {
+            this.array[i] = i < survivorValues.length ? survivorValues[i] : 0;
+            this.updateBarHeight(i);
+            if (this.array[i] > 0) {
+                bars[i].style.backgroundColor = '#4CAF50';
+                this.playSound(this.array[i]);
+            } else {
+                bars[i].style.backgroundColor = 'transparent';
+            }
+            await new Promise((r) =>
+                setTimeout(r, Math.max(3, 400 / survivorValues.length))
+            );
+        }
+
+        await new Promise((r) => setTimeout(r, 300));
+    }
+
+    async miracleSort() {
+        while (true) {
+            for (let i = 0; i < this.array.length - 1; i++) {
+                this.checkStopped();
+                this.comparisons++;
+                this.statsComparisons.textContent = this.comparisons;
+                this.highlightBars([i, i + 1], '#ffdf42');
+                this.playSound(this.array[i]);
+                await this.delay();
+
+                if (this.array[i] > this.array[i + 1]) {
+                    this.clearHighlights();
+                    await new Promise((r) => setTimeout(r, 300));
+                    break;
+                }
+
+                if (i === this.array.length - 2) return;
+            }
+        }
+    }
+
+    async sleepSort() {
+        const original = [...this.array];
+        const bars = this.barsContainer.children;
+
+        for (let i = 0; i < this.array.length; i++) {
+            this.array[i] = 0;
+            this.updateBarHeight(i);
+            bars[i].style.backgroundColor = '#333';
+        }
+        this._highlighted = [];
+        await new Promise((r) => setTimeout(r, 400));
+
+        const sorted = [...original].sort((a, b) => a - b);
+        for (let i = 0; i < sorted.length; i++) {
+            this.checkStopped();
+            this.array[i] = sorted[i];
+            this.updateBarHeight(i);
+            bars[i].style.backgroundColor = '#ffdf42';
+            this.swapCount++;
+            this.statsSwaps.textContent = this.swapCount;
+            this.playSound(sorted[i]);
+            await this.delay();
+            bars[i].style.backgroundColor = 'white';
         }
     }
 }
