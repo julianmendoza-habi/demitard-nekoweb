@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" type="text/css" href="css/styles.css">
+<link rel="stylesheet" type="text/css" href="css/sticker.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demitard - Sticker Maker</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html"><h1>Demitard</h1></a>
+        </div>
+        <div class="sticker-title">
+            <h2>WhatsApp Sticker Maker</h2>
+        </div>
+        <div class="sticker-workspace">
+            <div id="upload-zone" class="upload-zone">
+                <span class="upload-icon">&#128444;</span>
+                <p>Drag & drop an image here</p>
+                <label for="file-input">Choose File</label>
+                <input type="file" id="file-input" accept="image/*">
+            </div>
+
+            <div id="cropper-section" class="cropper-section">
+                <div class="cropper-container-wrapper">
+                    <img id="cropper-image" alt="Image to crop">
+                </div>
+                <p class="cropper-hint">Adjust the crop area, then hit "Make Sticker"</p>
+                <div class="sticker-actions">
+                    <button id="crop-btn">Make Sticker</button>
+                    <button id="reset-btn">Cancel</button>
+                </div>
+            </div>
+
+            <div id="preview-section" class="preview-section">
+                <h3>Your Sticker (512x512 WebP)</h3>
+                <div class="sticker-preview">
+                    <img id="preview-image" alt="Sticker preview">
+                </div>
+                <div class="export-actions">
+                    <button id="download-btn">Download</button>
+                    <button id="share-btn">Share to WhatsApp</button>
+                    <button id="new-sticker-btn">New Sticker</button>
+                </div>
+            </div>
+        </div>
+        <div class="sticker-info">
+            <p>On mobile, "Share to WhatsApp" opens the native share menu. On PC, it downloads the file and opens WhatsApp Web — paste the sticker in any chat and send it as a sticker.</p>
+        </div>
+        <div class="footer">
+            <a href="index.html"><p>Back to Home</p></a>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script src="scripts/stickerMaker.js"></script>
+</body>
+</html>

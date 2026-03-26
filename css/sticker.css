@@ -1,0 +1,364 @@
+.sticker-title {
+    width: 75%;
+    text-align: center;
+    color: white;
+    padding: 15px 0;
+}
+
+.sticker-title h2 {
+    font-size: 28px;
+    letter-spacing: 2px;
+}
+
+.sticker-workspace {
+    width: 75%;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    color: white;
+}
+
+.upload-zone {
+    width: 90%;
+    min-height: 200px;
+    border: 2px dashed #666;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: #ffdf42;
+    background-color: rgba(255, 223, 66, 0.05);
+}
+
+.upload-zone.hidden {
+    display: none;
+}
+
+.upload-zone p {
+    color: #ccc;
+    font-size: 16px;
+    text-align: center;
+}
+
+.upload-zone .upload-icon {
+    font-size: 48px;
+    color: #666;
+    transition: color 0.3s;
+}
+
+.upload-zone:hover .upload-icon {
+    color: #ffdf42;
+}
+
+.upload-zone label {
+    background-color: rgba(17, 17, 17, 0.95);
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    font-family: 'Kode Mono', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.upload-zone label:hover {
+    background-color: #ffdf42;
+    color: black;
+    border-color: #ffdf42;
+}
+
+.upload-zone input[type="file"] {
+    display: none;
+}
+
+.cropper-section {
+    width: 90%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.cropper-section.active {
+    display: flex;
+}
+
+.cropper-container-wrapper {
+    width: 100%;
+    max-width: 500px;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.cropper-container-wrapper img {
+    display: block;
+    max-width: 100%;
+}
+
+.cropper-hint {
+    color: #ccc;
+    font-size: 13px;
+    text-align: center;
+}
+
+.sticker-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sticker-actions button {
+    background-color: rgba(17, 17, 17, 0.95);
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    font-family: 'Kode Mono', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.sticker-actions button:hover:not(:disabled) {
+    background-color: #ffdf42;
+    color: black;
+    border-color: #ffdf42;
+}
+
+.sticker-actions button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+#crop-btn {
+    border-color: #ffdf42;
+    color: #ffdf42;
+}
+
+#crop-btn:hover:not(:disabled) {
+    background-color: #ffdf42;
+    color: black;
+    border-color: #ffdf42;
+}
+
+#reset-btn {
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+#reset-btn:hover:not(:disabled) {
+    background-color: #ff4444;
+    color: white;
+    border-color: #ff4444;
+}
+
+.preview-section {
+    width: 90%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.preview-section.active {
+    display: flex;
+}
+
+.preview-section h3 {
+    color: #ccc;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+.sticker-preview {
+    position: relative;
+    width: 256px;
+    height: 256px;
+    background-image:
+        linear-gradient(45deg, #333 25%, transparent 25%),
+        linear-gradient(-45deg, #333 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #333 75%),
+        linear-gradient(-45deg, transparent 75%, #333 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    border: 2px solid #666;
+}
+
+.sticker-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.export-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.export-actions button {
+    background-color: rgba(17, 17, 17, 0.95);
+    color: white;
+    border: 2px solid white;
+    padding: 12px 24px;
+    font-family: 'Kode Mono', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.export-actions button:hover {
+    background-color: #ffdf42;
+    color: black;
+    border-color: #ffdf42;
+}
+
+#download-btn {
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+#download-btn:hover {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+#share-btn {
+    border-color: #25D366;
+    color: #25D366;
+}
+
+#share-btn:hover {
+    background-color: #25D366;
+    color: white;
+    border-color: #25D366;
+}
+
+#new-sticker-btn {
+    border-color: #ffdf42;
+    color: #ffdf42;
+}
+
+#new-sticker-btn:hover {
+    background-color: #ffdf42;
+    color: black;
+    border-color: #ffdf42;
+}
+
+.sticker-info {
+    width: 75%;
+    text-align: center;
+    color: #ccc;
+    font-size: 12px;
+}
+
+.sticker-info p {
+    margin: 15px 20px;
+}
+
+.sticker-info a {
+    color: #25D366;
+}
+
+@media screen and (max-width: 768px) {
+    .sticker-title h2 {
+        font-size: 18px;
+    }
+
+    .sticker-workspace {
+        width: 90%;
+        padding: 15px;
+    }
+
+    .upload-zone {
+        min-height: 150px;
+    }
+
+    .upload-zone p {
+        font-size: 13px;
+    }
+
+    .upload-zone .upload-icon {
+        font-size: 36px;
+    }
+
+    .upload-zone label,
+    .sticker-actions button,
+    .export-actions button {
+        font-size: 11px;
+        padding: 8px 14px;
+    }
+
+    .cropper-hint {
+        font-size: 11px;
+    }
+
+    .sticker-preview {
+        width: 200px;
+        height: 200px;
+    }
+
+    .sticker-info {
+        width: 90%;
+        font-size: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .sticker-title h2 {
+        font-size: 14px;
+    }
+
+    .sticker-workspace {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .upload-zone {
+        min-height: 120px;
+        padding: 15px;
+    }
+
+    .upload-zone p {
+        font-size: 11px;
+    }
+
+    .upload-zone .upload-icon {
+        font-size: 28px;
+    }
+
+    .upload-zone label,
+    .sticker-actions button,
+    .export-actions button {
+        font-size: 9px;
+        padding: 6px 10px;
+    }
+
+    .cropper-hint {
+        font-size: 9px;
+    }
+
+    .sticker-preview {
+        width: 160px;
+        height: 160px;
+    }
+
+    .sticker-info {
+        width: 95%;
+        font-size: 9px;
+    }
+}
