@@ -1,7 +1,8 @@
-class StickerMaker {
+class ImageCropper {
     constructor() {
         this.cropper = null;
-        this.stickerBlob = null;
+        this.croppedBlob = null;
+        this.currentRatio = 0;
 
         this.uploadZone = document.getElementById('upload-zone');
         this.fileInput = document.getElementById('file-input');
@@ -12,8 +13,8 @@ class StickerMaker {
         this.cropBtn = document.getElementById('crop-btn');
         this.resetBtn = document.getElementById('reset-btn');
         this.downloadBtn = document.getElementById('download-btn');
-        this.shareBtn = document.getElementById('share-btn');
-        this.newStickerBtn = document.getElementById('new-sticker-btn');
+        this.newCropBtn = document.getElementById('new-sticker-btn');
+        this.ratioButtons = document.querySelectorAll('.ratio-btn');
 
         this.bindEvents();
     }
@@ -45,11 +46,14 @@ class StickerMaker {
             }
         });
 
+        this.ratioButtons.forEach((btn) => {
+            btn.addEventListener('click', () => this.setAspectRatio(btn));
+        });
+
         this.cropBtn.addEventListener('click', () => this.cropAndPreview());
         this.resetBtn.addEventListener('click', () => this.reset());
-        this.downloadBtn.addEventListener('click', () => this.downloadSticker());
-        this.shareBtn.addEventListener('click', () => this.shareToWhatsApp());
-        this.newStickerBtn.addEventListener('click', () => this.reset());
+        this.downloadBtn.addEventListener('click', () => this.downloadImage());
+        this.newCropBtn.addEventListener('click', () => this.reset());
     }
 
     handleFile(file) {
@@ -73,8 +77,10 @@ class StickerMaker {
             this.cropper.destroy();
         }
 
+        const ratio = this.currentRatio === 0 ? NaN : this.currentRatio;
+
         this.cropper = new Cropper(this.cropperImage, {
-            aspectRatio: 1,
+            aspectRatio: ratio,
             viewMode: 1,
             dragMode: 'move',
             autoCropArea: 0.9,
@@ -89,18 +95,28 @@ class StickerMaker {
         });
     }
 
+    setAspectRatio(selectedBtn) {
+        this.ratioButtons.forEach((btn) => btn.classList.remove('active'));
+        selectedBtn.classList.add('active');
+
+        const ratio = parseFloat(selectedBtn.dataset.ratio);
+        this.currentRatio = ratio;
+
+        if (this.cropper) {
+            this.cropper.setAspectRatio(ratio === 0 ? NaN : ratio);
+        }
+    }
+
     cropAndPreview() {
         if (!this.cropper) return;
 
         const canvas = this.cropper.getCroppedCanvas({
-            width: 512,
-            height: 512,
             imageSmoothingEnabled: true,
             imageSmoothingQuality: 'high',
         });
 
         canvas.toBlob((blob) => {
-            this.stickerBlob = blob;
+            this.croppedBlob = blob;
             const url = URL.createObjectURL(blob);
 
             this.previewImage.src = url;
@@ -111,47 +127,20 @@ class StickerMaker {
                 this.cropper.destroy();
                 this.cropper = null;
             }
-        }, 'image/webp', 0.9);
+        }, 'image/png');
     }
 
-    downloadSticker() {
-        if (!this.stickerBlob) return;
+    downloadImage() {
+        if (!this.croppedBlob) return;
 
-        const url = URL.createObjectURL(this.stickerBlob);
+        const url = URL.createObjectURL(this.croppedBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `sticker_${Date.now()}.webp`;
+        a.download = `cropped_${Date.now()}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    }
-
-    async shareToWhatsApp() {
-        if (!this.stickerBlob) return;
-
-        const file = new File([this.stickerBlob], 'sticker.webp', { type: 'image/webp' });
-
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'WhatsApp Sticker',
-                    text: '',
-                });
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    this.fallbackShare();
-                }
-            }
-        } else {
-            this.fallbackShare();
-        }
-    }
-
-    fallbackShare() {
-        this.downloadSticker();
-        window.open('https://web.whatsapp.com/', '_blank');
     }
 
     reset() {
@@ -159,10 +148,14 @@ class StickerMaker {
             this.cropper.destroy();
             this.cropper = null;
         }
-        this.stickerBlob = null;
+        this.croppedBlob = null;
         this.cropperImage.src = '';
         this.previewImage.src = '';
         this.fileInput.value = '';
+
+        this.ratioButtons.forEach((btn) => btn.classList.remove('active'));
+        this.ratioButtons[0].classList.add('active');
+        this.currentRatio = 0;
 
         this.cropperSection.classList.remove('active');
         this.previewSection.classList.remove('active');
@@ -171,5 +164,5 @@ class StickerMaker {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new StickerMaker();
+    new ImageCropper();
 });
