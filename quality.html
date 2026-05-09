@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" type="text/css" href="css/styles.css">
+<link rel="stylesheet" type="text/css" href="css/quality.css">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demitard - Quality Reducer</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html"><h1>Demitard</h1></a>
+        </div>
+        <div class="quality-title">
+            <h2>Quality Reducer</h2>
+        </div>
+        <div class="quality-workspace">
+
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="tab-image">&#128247; Image</button>
+                <button class="tab-btn" data-tab="tab-audio">&#127911; Audio</button>
+                <button class="tab-btn" data-tab="tab-video">&#127910; Video</button>
+            </div>
+
+            <!-- IMAGE TAB -->
+            <div id="tab-image" class="tab-panel active">
+                <div id="img-upload-zone" class="upload-zone">
+                    <span class="upload-icon">&#128247;</span>
+                    <p>Drag & drop an image here</p>
+                    <label for="img-file-input">Choose File</label>
+                    <input type="file" id="img-file-input" accept="image/*">
+                </div>
+                <div id="img-workspace" class="media-workspace">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label>Format</label>
+                            <select id="img-format">
+                                <option value="jpeg">JPEG</option>
+                                <option value="webp">WebP</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Quality: <span id="img-quality-value">80%</span></label>
+                            <input type="range" id="img-quality" min="1" max="100" value="80">
+                        </div>
+                    </div>
+                    <div class="preview-grid">
+                        <div class="preview-box">
+                            <p class="preview-label">Original &middot; <span id="img-size-original">—</span></p>
+                            <img id="img-preview-original" alt="Original">
+                        </div>
+                        <div class="preview-box">
+                            <p class="preview-label">Compressed &middot; <span id="img-size-compressed">—</span></p>
+                            <img id="img-preview-compressed" alt="Compressed">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="img-download-btn" class="btn-green">Download</button>
+                        <button id="img-reset-btn" class="btn-red">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUDIO TAB -->
+            <div id="tab-audio" class="tab-panel">
+                <div id="aud-upload-zone" class="upload-zone">
+                    <span class="upload-icon">&#127911;</span>
+                    <p>Drag & drop an audio file here</p>
+                    <p class="upload-hint">Supports MP3, WAV, OGG, FLAC, AAC, M4A</p>
+                    <label for="aud-file-input">Choose File</label>
+                    <input type="file" id="aud-file-input" accept="audio/*">
+                </div>
+                <div id="aud-workspace" class="media-workspace">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label>Sample Rate</label>
+                            <select id="aud-samplerate">
+                                <option value="8000">8,000 Hz &mdash; very low</option>
+                                <option value="11025">11,025 Hz &mdash; low</option>
+                                <option value="16000">16,000 Hz &mdash; speech</option>
+                                <option value="22050" selected>22,050 Hz &mdash; medium</option>
+                                <option value="44100">44,100 Hz &mdash; CD quality</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Bit Depth</label>
+                            <select id="aud-bitdepth">
+                                <option value="8">8-bit &mdash; very low</option>
+                                <option value="16" selected>16-bit &mdash; standard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="audio-info">
+                        <p id="aud-info-original" class="info-text">—</p>
+                        <p id="aud-info-output" class="info-text">—</p>
+                    </div>
+                    <div class="audio-players">
+                        <div class="audio-player-box">
+                            <p class="preview-label">Original</p>
+                            <audio id="aud-player-original" controls></audio>
+                        </div>
+                        <div class="audio-player-box">
+                            <p class="preview-label">Processed &middot; <span id="aud-size-output">—</span></p>
+                            <audio id="aud-player-output" controls></audio>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="aud-process-btn" class="btn-yellow">Process</button>
+                        <button id="aud-download-btn" class="btn-green" disabled>Download</button>
+                        <button id="aud-reset-btn" class="btn-red">Reset</button>
+                    </div>
+                    <p id="aud-status" class="status-text"></p>
+                </div>
+            </div>
+
+            <!-- VIDEO TAB -->
+            <div id="tab-video" class="tab-panel">
+                <div id="vid-upload-zone" class="upload-zone">
+                    <span class="upload-icon">&#127910;</span>
+                    <p>Drag & drop a video file here</p>
+                    <p class="upload-hint">Supports MP4, WebM, MOV, AVI, MKV</p>
+                    <label for="vid-file-input">Choose File</label>
+                    <input type="file" id="vid-file-input" accept="video/*">
+                </div>
+                <div id="vid-workspace" class="media-workspace">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label>Quality (CRF)</label>
+                            <select id="vid-quality">
+                                <option value="18">High &mdash; CRF 18</option>
+                                <option value="28" selected>Medium &mdash; CRF 28</option>
+                                <option value="38">Low &mdash; CRF 38</option>
+                                <option value="48">Very Low &mdash; CRF 48</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Resolution</label>
+                            <select id="vid-resolution">
+                                <option value="original" selected>Original</option>
+                                <option value="720">720p</option>
+                                <option value="480">480p</option>
+                                <option value="360">360p</option>
+                                <option value="240">240p</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="video-preview-row">
+                        <div class="video-box">
+                            <p class="preview-label">Original &middot; <span id="vid-size-original">—</span></p>
+                            <video id="vid-player-original" controls></video>
+                        </div>
+                        <div id="vid-output-box" class="video-box" style="display:none">
+                            <p class="preview-label">Compressed &middot; <span id="vid-size-output">—</span></p>
+                            <video id="vid-player-output" controls></video>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="vid-process-btn" class="btn-yellow">Process Video</button>
+                        <button id="vid-download-btn" class="btn-green" disabled>Download</button>
+                        <button id="vid-reset-btn" class="btn-red">Reset</button>
+                    </div>
+                    <p id="vid-status" class="status-text"></p>
+                    <div id="vid-progress-bar" class="progress-bar" style="display:none">
+                        <div id="vid-progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="footer">
+            <a href="index.html"><p>Back to Home</p></a>
+        </div>
+    </div>
+    <script src="scripts/quality.js"></script>
+</body>
+</html>
