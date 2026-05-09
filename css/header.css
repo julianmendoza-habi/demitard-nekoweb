@@ -10,8 +10,12 @@
     font-style: normal;
     font-size: 98px;
     opacity: 1;
-    /* Add flicker effect */
-    animation: flicker 1.5s infinite alternate;     
+    text-shadow:
+        0 0 4px #f3e386,
+        0 0 11px #f3e386,
+        0 0 19px #f3e386,
+        0 0 40px #ffdf42,
+        0 0 60px #ffdf42;
 }
 
 /* Make header have black background color */
@@ -24,22 +28,6 @@
     border: 2px solid white;
 }
 
-@keyframes flicker {
-    0%, 18%, 22%, 25%, 53%, 57%, 100% {
-      text-shadow:
-        0 0 4px #f3e386,
-        0 0 11px #f3e386,
-        0 0 19px #f3e386,
-        0 0 40px #ffdf42,
-        0 0 80px #ffdf42,
-        0 0 90px #ffdf42,
-        0 0 100px #ffdf42,
-        0 0 150px #ffdf42;
-    }
-    20%, 24%, 55% {       
-      text-shadow: none;
-    }
-  }
 
 /* Media query for tablets and smaller screens */
 @media screen and (max-width: 768px) {
