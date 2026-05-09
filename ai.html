@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" type="text/css" href="css/styles.css">
+<link rel="stylesheet" type="text/css" href="css/ai.css">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demitard - AI Chat</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html"><h1>Demitard</h1></a>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-box">
+                <h3>API Settings</h3>
+                <label class="modal-label">
+                    Server URL
+                    <input type="url" id="api-url-input" placeholder="https://demitard.nya.je/api-ia" spellcheck="false">
+                </label>
+                <p class="modal-hint">URL of your local AI server, without trailing slash.</p>
+                <label class="modal-label" style="margin-top:6px">
+                    Model
+                    <input type="text" id="model-input" placeholder="gemma3:4b" spellcheck="false">
+                </label>
+                <p class="modal-hint">Leave blank to use the server's default model.</p>
+                <div class="modal-actions">
+                    <button id="save-settings-btn" class="btn-primary">Save</button>
+                    <button id="cancel-settings-btn" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Overlay -->
+        <div id="auth-overlay" class="auth-overlay">
+            <div class="auth-box">
+                <div class="auth-header">
+                    <h2>AI Chat</h2>
+                    <button id="auth-settings-btn" class="icon-btn" title="API Settings">&#9881;</button>
+                </div>
+                <div class="auth-tabs">
+                    <button id="tab-login" class="auth-tab active">Login</button>
+                    <button id="tab-register" class="auth-tab">Register</button>
+                </div>
+                <div id="auth-error" class="auth-error hidden"></div>
+
+                <form id="login-form" class="auth-form">
+                    <label class="form-label">
+                        Email
+                        <input type="email" id="login-email" autocomplete="email" required>
+                    </label>
+                    <label class="form-label">
+                        Password
+                        <input type="password" id="login-password" autocomplete="current-password" required>
+                    </label>
+                    <button type="submit" class="btn-primary btn-full" id="login-btn">Login</button>
+                </form>
+
+                <form id="register-form" class="auth-form hidden">
+                    <label class="form-label">
+                        Email
+                        <input type="email" id="register-email" autocomplete="email" required>
+                    </label>
+                    <label class="form-label">
+                        Display Name <span class="optional">(optional)</span>
+                        <input type="text" id="register-name" autocomplete="name">
+                    </label>
+                    <label class="form-label">
+                        Password <span class="optional">(min 8 chars)</span>
+                        <input type="password" id="register-password" autocomplete="new-password" required minlength="8">
+                    </label>
+                    <button type="submit" class="btn-primary btn-full" id="register-btn">Register</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Chat Interface -->
+        <div id="chat-interface" class="chat-interface hidden">
+            <div class="chat-topbar">
+                <span id="user-display" class="user-display"></span>
+                <div class="topbar-actions">
+                    <button id="settings-btn" class="icon-btn" title="API Settings">&#9881;</button>
+                    <button id="logout-btn" class="btn-secondary btn-sm">Logout</button>
+                </div>
+            </div>
+
+            <div class="chat-layout">
+                <!-- Sidebar -->
+                <div class="chat-sidebar">
+                    <button id="new-chat-btn" class="btn-primary btn-full">+ New Chat</button>
+                    <div id="conversation-list" class="conversation-list">
+                        <p class="sidebar-empty">No conversations yet</p>
+                    </div>
+                </div>
+
+                <!-- Chat Panel -->
+                <div class="chat-panel">
+                    <div id="messages" class="messages">
+                        <div class="messages-empty">
+                            <p>Start a conversation</p>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <div class="input-controls">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="thinking-mode">
+                                <span>Thinking mode</span>
+                            </label>
+                        </div>
+                        <div class="input-row">
+                            <textarea
+                                id="message-input"
+                                class="message-textarea"
+                                placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
+                                rows="1"
+                                maxlength="32000"
+                            ></textarea>
+                            <button id="send-btn" class="btn-primary send-btn" disabled>Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="index.html"><p>Back to Home</p></a>
+        </div>
+    </div>
+    <script src="scripts/ai.js"></script>
+</body>
+</html>
