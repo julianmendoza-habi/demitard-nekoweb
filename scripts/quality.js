@@ -258,6 +258,7 @@ async function ensureFFmpeg() {
     const workspace    = document.getElementById('vid-workspace');
     const qualSel      = document.getElementById('vid-quality');
     const resSel       = document.getElementById('vid-resolution');
+    const audBitrateSel = document.getElementById('vid-audio-bitrate');
     const playerOrig   = document.getElementById('vid-player-original');
     const sizeOrig     = document.getElementById('vid-size-original');
     const outputBox    = document.getElementById('vid-output-box');
@@ -306,11 +307,16 @@ async function ensureFFmpeg() {
 
             const crf = qualSel.value;
             const res = resSel.value;
+            const audBitrate = audBitrateSel.value;
             const args = ['-i', inName];
             if (res !== 'original') args.push('-vf', `scale=-2:${res}`);
-            args.push('-c:v', 'libx264', '-crf', crf, '-preset', 'fast',
-                      '-c:a', 'aac', '-b:a', '128k',
-                      '-movflags', '+faststart', 'output.mp4');
+            args.push('-c:v', 'libx264', '-crf', crf, '-preset', 'fast');
+            if (audBitrate === '0') {
+                args.push('-an');
+            } else {
+                args.push('-c:a', 'aac', '-b:a', audBitrate + 'k');
+            }
+            args.push('-movflags', '+faststart', 'output.mp4');
 
             statusText.textContent = 'Encoding...';
             await ffmpeg.exec(args);

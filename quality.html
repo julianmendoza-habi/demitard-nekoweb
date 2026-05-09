@@ -43,7 +43,7 @@
                         </div>
                         <div class="control-group">
                             <label>Quality: <span id="img-quality-value">80%</span></label>
-                            <input type="range" id="img-quality" min="1" max="100" value="80">
+                            <input type="range" id="img-quality" min="0" max="100" value="80">
                         </div>
                     </div>
                     <div class="preview-grid">
@@ -87,8 +87,10 @@
                         <div class="control-group">
                             <label>Bitrate</label>
                             <select id="aud-bitrate">
-                                <option value="32">32 kbps &mdash; very low</option>
-                                <option value="64">64 kbps &mdash; low</option>
+                                <option value="8">8 kbps &mdash; lowest</option>
+                                <option value="16">16 kbps &mdash; very low</option>
+                                <option value="32">32 kbps &mdash; low</option>
+                                <option value="64">64 kbps &mdash; medium-low</option>
                                 <option value="96" selected>96 kbps &mdash; medium</option>
                                 <option value="128">128 kbps &mdash; high</option>
                                 <option value="192">192 kbps &mdash; very high</option>
@@ -136,6 +138,8 @@
                                 <option value="28" selected>Medium &mdash; CRF 28</option>
                                 <option value="38">Low &mdash; CRF 38</option>
                                 <option value="48">Very Low &mdash; CRF 48</option>
+                                <option value="56">Terrible &mdash; CRF 56</option>
+                                <option value="63">Lowest &mdash; CRF 63</option>
                             </select>
                         </div>
                         <div class="control-group">
@@ -146,6 +150,20 @@
                                 <option value="480">480p</option>
                                 <option value="360">360p</option>
                                 <option value="240">240p</option>
+                                <option value="144">144p</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Audio Bitrate</label>
+                            <select id="vid-audio-bitrate">
+                                <option value="8">8 kbps &mdash; lowest</option>
+                                <option value="16">16 kbps &mdash; very low</option>
+                                <option value="32">32 kbps &mdash; low</option>
+                                <option value="64">64 kbps &mdash; low</option>
+                                <option value="96">96 kbps &mdash; medium</option>
+                                <option value="128" selected>128 kbps &mdash; high</option>
+                                <option value="192">192 kbps &mdash; very high</option>
+                                <option value="0">Strip audio</option>
                             </select>
                         </div>
                     </div>
