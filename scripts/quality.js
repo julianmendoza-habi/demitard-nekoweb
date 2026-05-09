@@ -117,7 +117,7 @@ function setupUploadZone(zone, input, onFile) {
     const fileInput   = document.getElementById('aud-file-input');
     const workspace   = document.getElementById('aud-workspace');
     const rateSelect  = document.getElementById('aud-samplerate');
-    const bitsSelect  = document.getElementById('aud-bitdepth');
+    const bitrateSelect = document.getElementById('aud-bitrate');
     const infoOrig    = document.getElementById('aud-info-original');
     const infoOut     = document.getElementById('aud-info-output');
     const playerOrig  = document.getElementById('aud-player-original');
@@ -128,103 +128,65 @@ function setupUploadZone(zone, input, onFile) {
     const resetBtn    = document.getElementById('aud-reset-btn');
     const statusText  = document.getElementById('aud-status');
 
-    let origFile = null, origBuffer = null, resultBlob = null;
+    let origFile = null, resultBlob = null;
 
     setupUploadZone(uploadZone, fileInput, loadFile);
 
-    async function loadFile(file) {
+    function loadFile(file) {
         origFile = file;
         playerOrig.src = URL.createObjectURL(file);
-        infoOrig.textContent = 'Decoding...';
-        try {
-            const arrayBuf = await file.arrayBuffer();
-            const ctx = new AudioContext();
-            origBuffer = await ctx.decodeAudioData(arrayBuf);
-            await ctx.close();
-            infoOrig.textContent = `Original: ${origBuffer.numberOfChannels}ch · ${origBuffer.sampleRate.toLocaleString()} Hz · ${origBuffer.duration.toFixed(1)}s · ${fmtBytes(file.size)}`;
-            uploadZone.classList.add('hidden');
-            workspace.classList.add('active');
-            statusText.textContent = 'Adjust settings and click Process.';
-        } catch (e) {
-            infoOrig.textContent = 'Error decoding audio.';
-        }
+        infoOrig.textContent = `Original: ${fmtBytes(file.size)}`;
+        uploadZone.classList.add('hidden');
+        workspace.classList.add('active');
+        statusText.textContent = 'Adjust settings and click Process.';
     }
 
     processBtn.addEventListener('click', async () => {
-        if (!origBuffer) return;
-        const targetRate = parseInt(rateSelect.value);
-        const bitDepth   = parseInt(bitsSelect.value);
+        if (!origFile) return;
         processBtn.disabled = true;
-        statusText.textContent = 'Processing...';
+        dlBtn.disabled = true;
+        statusText.textContent = ffmpegReady ? 'Processing...' : 'Loading FFmpeg (~10 MB, first time only)...';
 
         try {
-            const ch   = origBuffer.numberOfChannels;
-            const dur  = origBuffer.duration;
-            const offCtx = new OfflineAudioContext(ch, Math.ceil(dur * targetRate), targetRate);
-            const src    = offCtx.createBufferSource();
-            src.buffer   = origBuffer;
-            src.connect(offCtx.destination);
-            src.start();
-            const rendered = await offCtx.startRendering();
+            await ensureFFmpeg();
 
-            const channels = [];
-            for (let c = 0; c < ch; c++) channels.push(rendered.getChannelData(c));
+            const ext    = (origFile.name.split('.').pop() || 'audio').toLowerCase();
+            const inName = 'input.' + ext;
+            statusText.textContent = 'Writing input...';
+            await ffmpeg.writeFile(inName, await fetchFileFn(origFile));
 
-            const wavBuf  = encodeWAV(channels, targetRate, bitDepth);
-            resultBlob    = new Blob([wavBuf], { type: 'audio/wav' });
+            const rate   = rateSelect.value;
+            const bitrate = bitrateSelect.value;
+            statusText.textContent = 'Encoding to OGG...';
+            await ffmpeg.exec([
+                '-i', inName,
+                '-c:a', 'libvorbis',
+                '-b:a', bitrate + 'k',
+                '-ar', rate,
+                'output.ogg',
+            ]);
+
+            const data = await ffmpeg.readFile('output.ogg');
+            resultBlob = new Blob([data.buffer], { type: 'audio/ogg' });
 
             if (playerOut.src) URL.revokeObjectURL(playerOut.src);
             playerOut.src = URL.createObjectURL(resultBlob);
             sizeOut.textContent = fmtBytes(resultBlob.size);
-            infoOut.textContent = `Output: ${ch}ch · ${targetRate.toLocaleString()} Hz · ${bitDepth}-bit WAV · ${fmtBytes(resultBlob.size)}`;
+            infoOut.textContent = `Output: OGG Vorbis · ${parseInt(rate).toLocaleString()} Hz · ${bitrate} kbps · ${fmtBytes(resultBlob.size)}`;
             dlBtn.disabled = false;
             statusText.textContent = 'Done!';
+
+            await ffmpeg.deleteFile(inName).catch(() => {});
+            await ffmpeg.deleteFile('output.ogg').catch(() => {});
         } catch (e) {
             statusText.textContent = 'Error: ' + e.message;
         }
         processBtn.disabled = false;
     });
 
-    function encodeWAV(channels, sampleRate, bitDepth) {
-        const numCh    = channels.length;
-        const nSamples = channels[0].length;
-        const bps      = bitDepth / 8;
-        const dataSize = nSamples * numCh * bps;
-        const buf      = new ArrayBuffer(44 + dataSize);
-        const v        = new DataView(buf);
-
-        function ws(off, s) { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); }
-
-        ws(0, 'RIFF');  v.setUint32(4,  36 + dataSize, true);
-        ws(8, 'WAVE');  ws(12, 'fmt ');
-        v.setUint32(16, 16, true);
-        v.setUint16(20, 1, true);
-        v.setUint16(22, numCh, true);
-        v.setUint32(24, sampleRate, true);
-        v.setUint32(28, sampleRate * numCh * bps, true);
-        v.setUint16(32, numCh * bps, true);
-        v.setUint16(34, bitDepth, true);
-        ws(36, 'data'); v.setUint32(40, dataSize, true);
-
-        let off = 44;
-        for (let i = 0; i < nSamples; i++) {
-            for (let c = 0; c < numCh; c++) {
-                const s = Math.max(-1, Math.min(1, channels[c][i]));
-                if (bitDepth === 16) {
-                    v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-                    off += 2;
-                } else {
-                    v.setUint8(off, Math.round((s + 1) * 127.5));
-                    off += 1;
-                }
-            }
-        }
-        return buf;
-    }
-
     dlBtn.addEventListener('click', () => {
         if (!resultBlob) return;
-        const name = (origFile.name.replace(/\.[^.]+$/, '') || 'audio') + '_compressed.wav';
+        const name = (origFile.name.replace(/\.[^.]+$/, '') || 'audio') + '_compressed.ogg';
         const a = document.createElement('a');
         a.href = URL.createObjectURL(resultBlob);
         a.download = name;
@@ -233,7 +195,7 @@ function setupUploadZone(zone, input, onFile) {
     });
 
     resetBtn.addEventListener('click', () => {
-        origFile = origBuffer = resultBlob = null;
+        origFile = resultBlob = null;
         fileInput.value = '';
         playerOrig.src = playerOut.src = '';
         infoOrig.textContent = infoOut.textContent = '—';
@@ -246,7 +208,49 @@ function setupUploadZone(zone, input, onFile) {
 })();
 
 // ========================
-// VIDEO (FFmpeg.wasm via CDN, loaded lazily)
+// FFmpeg.wasm — shared by audio and video tabs
+// ========================
+
+// FFmpeg's constructor spawns a Worker using an unpkg URL (cross-origin).
+// Browsers block cross-origin worker scripts, so we intercept Worker() and
+// wrap any cross-origin module worker in a same-origin blob that re-imports it.
+(function () {
+    const _Worker = window.Worker;
+    window.Worker = function (url, opts) {
+        const href = url instanceof URL ? url.href : url;
+        if (typeof href === 'string' && !href.startsWith('blob:')) {
+            try {
+                if (new URL(href).origin !== location.origin) {
+                    const blob = new Blob([`import "${href}";`], { type: 'application/javascript' });
+                    return new _Worker(URL.createObjectURL(blob), opts);
+                }
+            } catch (e) { /* relative URL, pass through */ }
+        }
+        return new _Worker(url, opts);
+    };
+    window.Worker.prototype = _Worker.prototype;
+}());
+
+let ffmpeg = null, fetchFileFn = null, ffmpegReady = false;
+
+async function ensureFFmpeg() {
+    if (ffmpegReady) return;
+    const [ffmpegMod, utilMod] = await Promise.all([
+        import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/esm/index.js'),
+        import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js'),
+    ]);
+    fetchFileFn = utilMod.fetchFile;
+    ffmpeg = new ffmpegMod.FFmpeg();
+    const base = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    await ffmpeg.load({
+        coreURL: await utilMod.toBlobURL(`${base}/ffmpeg-core.js`,   'text/javascript'),
+        wasmURL: await utilMod.toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    ffmpegReady = true;
+}
+
+// ========================
+// VIDEO
 // ========================
 (function () {
     const uploadZone   = document.getElementById('vid-upload-zone');
@@ -267,7 +271,6 @@ function setupUploadZone(zone, input, onFile) {
     const progressFill = document.getElementById('vid-progress-fill');
 
     let origFile = null, resultBlob = null;
-    let ffmpeg = null, fetchFileFn = null, ffmpegReady = false;
 
     setupUploadZone(uploadZone, fileInput, loadFile);
 
@@ -281,25 +284,6 @@ function setupUploadZone(zone, input, onFile) {
         statusText.textContent = 'Adjust settings and click Process Video.';
     }
 
-    async function ensureFFmpeg() {
-        if (ffmpegReady) return;
-        const [ffmpegMod, utilMod] = await Promise.all([
-            import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/esm/index.js'),
-            import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js'),
-        ]);
-        fetchFileFn = utilMod.fetchFile;
-        ffmpeg = new ffmpegMod.FFmpeg();
-        const base = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-        await ffmpeg.load({
-            coreURL: await utilMod.toBlobURL(`${base}/ffmpeg-core.js`,   'text/javascript'),
-            wasmURL: await utilMod.toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
-        });
-        ffmpeg.on('progress', ({ progress }) => {
-            progressFill.style.width = Math.round(Math.min(progress, 1) * 100) + '%';
-        });
-        ffmpegReady = true;
-    }
-
     processBtn.addEventListener('click', async () => {
         if (!origFile) return;
         processBtn.disabled = true;
@@ -311,6 +295,9 @@ function setupUploadZone(zone, input, onFile) {
         try {
             if (!ffmpegReady) statusText.textContent = 'Loading FFmpeg (~10 MB, first time only)...';
             await ensureFFmpeg();
+            ffmpeg.on('progress', ({ progress }) => {
+                progressFill.style.width = Math.round(Math.min(progress, 1) * 100) + '%';
+            });
 
             statusText.textContent = 'Writing input...';
             const ext = (origFile.name.split('.').pop() || 'mp4').toLowerCase();
