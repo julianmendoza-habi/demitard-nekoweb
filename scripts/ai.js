@@ -1,38 +1,50 @@
 /* jshint esversion: 11 */
 
-const STORAGE_TOKEN = 'demitard_ai_token';
-const STORAGE_URL   = 'demitard_ai_url';
-const STORAGE_MODEL = 'demitard_ai_model';
-const STORAGE_CONVS = 'demitard_ai_conversations';
-const DEFAULT_URL   = 'http://localhost:8000';
+const STORAGE_TOKEN  = 'demitard_ai_token';
+const STORAGE_URL    = 'demitard_ai_url';
+const STORAGE_MODEL  = 'demitard_ai_model';
+const STORAGE_TITLES = 'demitard_ai_titles';
+const DEFAULT_URL    = 'http://localhost:8000';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
 let apiUrl    = localStorage.getItem(STORAGE_URL)   || DEFAULT_URL;
 let token     = localStorage.getItem(STORAGE_TOKEN) || null;
 let modelName = localStorage.getItem(STORAGE_MODEL) || '';
-let currentChatId = null;
-let isStreaming   = false;
+let currentChatId  = null;
+let isStreaming     = false;
+let conversations   = [];
 
-function getConversations() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_CONVS) || '[]'); }
-    catch { return []; }
+function getTitles() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_TITLES) || '{}'); }
+    catch { return {}; }
 }
 
-function saveConversations(convs) {
-    localStorage.setItem(STORAGE_CONVS, JSON.stringify(convs));
+function saveTitle(chatId, title) {
+    const titles = getTitles();
+    titles[chatId] = title;
+    localStorage.setItem(STORAGE_TITLES, JSON.stringify(titles));
 }
 
-function upsertConversation(id, title, model) {
-    const convs = getConversations();
-    const idx = convs.findIndex(c => c.id === id);
-    if (idx === -1) convs.unshift({ id, title, model, created_at: new Date().toISOString() });
-    else convs[idx] = { ...convs[idx], title, model };
-    saveConversations(convs);
+function removeTitle(chatId) {
+    const titles = getTitles();
+    delete titles[chatId];
+    localStorage.setItem(STORAGE_TITLES, JSON.stringify(titles));
 }
 
-function removeConversation(id) {
-    saveConversations(getConversations().filter(c => c.id !== id));
+function formatChatDate(isoStr) {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function loadConversations() {
+    try {
+        const res = await apiFetch('/chats');
+        conversations = await res.json();
+    } catch {
+        conversations = [];
+    }
+    renderConversations();
 }
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
@@ -241,7 +253,7 @@ function showChatScreen(user) {
     authOverlay.classList.add('hidden');
     chatInterface.classList.remove('hidden');
     userDisplay.textContent = user.display_name || user.email;
-    renderConversations();
+    loadConversations();
 }
 
 // ── Settings Modal ────────────────────────────────────────────────────────────
@@ -329,33 +341,34 @@ logoutBtn.addEventListener('click', logout);
 // ── Conversations sidebar ─────────────────────────────────────────────────────
 
 function renderConversations() {
-    const convs = getConversations();
     conversationList.innerHTML = '';
 
-    if (convs.length === 0) {
+    if (conversations.length === 0) {
         conversationList.innerHTML = '<p class="sidebar-empty">No conversations yet</p>';
         return;
     }
 
-    convs.forEach(conv => {
+    const localTitles = getTitles();
+    conversations.forEach(conv => {
         const item = document.createElement('div');
-        item.className = 'conversation-item' + (conv.id === currentChatId ? ' active' : '');
-        item.dataset.id = conv.id;
+        item.className = 'conversation-item' + (conv.chat_id === currentChatId ? ' active' : '');
+        item.dataset.id = conv.chat_id;
 
-        const title = document.createElement('span');
-        title.className = 'conv-title';
-        title.textContent = conv.title || 'Untitled';
-        title.title = conv.title || 'Untitled';
+        const titleText = conv.title || localTitles[conv.chat_id] || formatChatDate(conv.created_at);
+        const titleEl = document.createElement('span');
+        titleEl.className = 'conv-title';
+        titleEl.textContent = titleText;
+        titleEl.title = titleText;
 
         const del = document.createElement('button');
         del.className = 'conv-delete';
         del.textContent = '×';
         del.title = 'Delete conversation';
-        del.addEventListener('click', (e) => { e.stopPropagation(); deleteConversation(conv.id); });
+        del.addEventListener('click', (e) => { e.stopPropagation(); deleteConversation(conv.chat_id); });
 
-        item.appendChild(title);
+        item.appendChild(titleEl);
         item.appendChild(del);
-        item.addEventListener('click', () => selectConversation(conv.id));
+        item.addEventListener('click', () => selectConversation(conv.chat_id));
         conversationList.appendChild(item);
     });
 }
@@ -376,13 +389,13 @@ async function selectConversation(id) {
 
 async function deleteConversation(id) {
     try { await apiFetch(`/chat/${id}`, { method: 'DELETE' }); } catch {}
-    removeConversation(id);
+    removeTitle(id);
     if (currentChatId === id) {
         currentChatId = null;
         clearMessages();
         messagesEl.innerHTML = '<div class="messages-empty"><p>Start a conversation</p></div>';
     }
-    renderConversations();
+    await loadConversations();
 }
 
 newChatBtn.addEventListener('click', () => {
@@ -538,10 +551,13 @@ async function sendMessage() {
         aBubble.innerHTML = renderMarkdown(accText);
 
         if (chatIdFromStream) {
+            const isNew = currentChatId !== chatIdFromStream;
             currentChatId = chatIdFromStream;
-            const title = text.length > 42 ? text.slice(0, 42) + '…' : text;
-            upsertConversation(currentChatId, title, modelName || null);
-            renderConversations();
+            if (isNew) {
+                const title = text.length > 42 ? text.slice(0, 42) + '…' : text;
+                saveTitle(currentChatId, title);
+            }
+            await loadConversations();
         }
 
     } catch (err) {
