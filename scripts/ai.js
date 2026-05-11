@@ -4,7 +4,7 @@ const STORAGE_TOKEN  = 'demitard_ai_token';
 const STORAGE_URL    = 'demitard_ai_url';
 const STORAGE_MODEL  = 'demitard_ai_model';
 const STORAGE_TITLES = 'demitard_ai_titles';
-const DEFAULT_URL    = 'http://localhost:8000';
+const DEFAULT_URL    = 'https://demitard.nya.je/api-ai';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
